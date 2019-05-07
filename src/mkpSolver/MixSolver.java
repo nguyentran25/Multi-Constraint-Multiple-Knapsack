@@ -601,9 +601,9 @@ public class MixSolver {
 		//Search
 		MixSolver solver = new MixSolver(inputData);
 		System.out.println("Searching....");
+    	solver.greedy_search();
     	solver.hillClimbing();
 		solver.updateViolation();
-    	solver.greedy_search();
        	for(int i = 0; i < 10; i++)
     	{
     		System.out.println("Step: " + i);
