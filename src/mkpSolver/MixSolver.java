@@ -175,8 +175,6 @@ public class MixSolver {
 				List<Integer> current_item = new ArrayList<Integer>();
 				for(Integer item: current_item_set)
 					current_item.add(item);
-				//TODO sort item theo thu tu tang dan W, uu tien chon W be truoc
-//				Collections.sort(current_item);
 				PriorityQueue<binLowWeightNeeded> bin_candidate = new PriorityQueue<binLowWeightNeeded>(this.n_bins, comparator);
 				for(Integer item: current_item)
 				{
@@ -238,11 +236,7 @@ public class MixSolver {
 						&& !this.violation_bin.contains(Integer.valueOf(bin))
 						)
 				{
-					if(min_c_w > this.bins[bin].getCapacity()) //TODO: nem vao thang min current w chua chac 
-						//da tot vi co the lam tang type hoac class, cac item khac khong nem vao duoc
-						//=>Can them chien luoc search o day
-						//Co the la xao tron, swap tren cac item violation truoc (nay da duoc xep)
-						//hoac tham chi la ca cac item truoc day da duoc xep theo greedy
+					if(min_c_w > this.bins[bin].getCapacity())
 					{
 						min_c_w = this.bins[bin].getCapacity();
 						bin_selected = bin;
@@ -260,27 +254,13 @@ public class MixSolver {
 	
 	public void hillClimbing()
 	{
-		/*TODO: Tim cach chinh sua loi giai X:
-		Duyet tu dau den cuoi X (xet tung item):
-		- Xem xet cac cach di chuyen hop le cho X[i]
-		+ Neu X[i] chua duoc xep vao bin nao:
-		Co mot tap cac possible_move[] neu cac heuristic duoi day khong tao duoc Move nao thi random trong mang nay
-		Uu tien bin khong tang T, R
-		Uu tien bin co low_w_need to de giam (hoac cac bin co low_w_need nho nhung > 0)
-		Neu chua co bin nao duoc xep?
-		Chon bin co low_w thap
-		+ Neu X[i] da duoc xep vao:
-		Neu low_w_need > 0: Khong di chuyen sang low_w_need < 0, neu di sang low_w_need > 0 ma lam cho no nho hon low_n_need cua bin cu thi OK 
-		Di theo huong khong tang T, R
-		Neu low_w_need < 0: Neu di chuyen lam cho low_w_need < 0 thi di chuyen sang low_w_need > 0 lon nhat, 
-		*/
 		Comparator<binLowWeightNeeded> tr_comparator = new TRcomparator();
 		PriorityQueue<binLowWeightNeeded> list_move_heuristic = new PriorityQueue<binLowWeightNeeded>(tr_comparator);
 //		List<Move> list_move_heuristic = new ArrayList<>();
 		List<Move> possible_move = new ArrayList<>();
 		Random random_move = new Random();
 		int iter = 0;
-		int max_step = 10000;
+		int max_step = 1000;
 		while(iter < max_step)
 		{
 			System.out.println("Step: " + iter);
@@ -379,62 +359,8 @@ public class MixSolver {
 					}
 				}
 			}
-//			this.updateViolation(); //Khong can update violation vi ta assign X[i] vao cac bin da thoa man?
-									//Thuc ra la update o cuoi vi dang trong qua trinh xep thi khong
-									//can check bin da vi pham ve low_weight hay chua (co the cai thien)
 			iter++;
 		}
-	}
-	
-	public void solver2()
-	{
-		Comparator<binLowWeightNeeded> comparator = new lowWComparator();
-		for(Integer key_type: map_item_type.keySet())
-		{
-			Set<Integer> list_items_type = map_item_type.get(key_type);
-			for(Integer key_class: map_item_class.keySet())
-			{
-				Set<Integer> list_items_class = map_item_class.get(key_class);
-				Set<Integer> current_item_set = new HashSet<Integer>(list_items_type);
-				current_item_set.retainAll(list_items_class);
-				List<Integer> current_item = new ArrayList<Integer>();
-				for(Integer item: current_item_set)
-					current_item.add(item);
-				//TODO sort item theo thu tu tang dan W, uu tien chon W be truoc
-//				Collections.sort(current_item);
-				PriorityQueue<binLowWeightNeeded> bin_candidate = new PriorityQueue<binLowWeightNeeded>(this.n_bins, comparator);
-				for(Integer item: current_item)
-				{
-					PriorityQueue<binLowWeightNeeded> bins = new PriorityQueue<binLowWeightNeeded>(bin_candidate);
-					while(bins.size() != 0)
-					{
-						binLowWeightNeeded bin = bins.remove();
-						int bin_index = bin.index;
-						if(checkValidBin(bin_index, item))
-						{
-							X[item] = bin_index;
-							this.updateConstraint(bin_index, item);
-							break;
-						}
-					}
-					if(X[item] == (this.n_bins)) //Chua xep duoc
-					{
-						for(int bin_index: inputData.getItems()[item].getBinIndices())
-						{
-							if(checkValidBin(bin_index, item))
-							{
-								X[item] = bin_index;
-								this.updateConstraint(bin_index, item);
-								binLowWeightNeeded bin = new binLowWeightNeeded(bin_index, low_w_needed[bin_index]);
-								bin_candidate.add(bin);
-								break;
-							}
-						}
-					}
-				}
-			}
-		}
-		this.updateViolation();
 	}
 	
 	public boolean checkValidBin(int bin_index, int item_index)
@@ -677,20 +603,12 @@ public class MixSolver {
 		System.out.println("Searching....");
     	solver.hillClimbing();
 		solver.updateViolation();
-		solver.printSolution(solver.X);
-//    	solver.greedy_search();
-    	int it = 0;
-//    	solver.hillClimbing();
-//		solver.updateViolation();
-    	while(it < 1)
+    	solver.greedy_search();
+       	for(int i = 0; i < 10; i++)
     	{
-        	for(int i = 0; i < 10; i++)
-        	{
-        		System.out.println("Step: " + i);
-        		solver.add_item_to_bin();
-    			solver.updateViolation();
-        	}
-        	it++;
+    		System.out.println("Step: " + i);
+    		solver.add_item_to_bin();
+			solver.updateViolation();
     	}
     	solver.updateViolation();
         //Print
